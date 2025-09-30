@@ -152,10 +152,22 @@ Item { // Bar content region
                         color: Appearance.colors.colOnLayer0
                     }
                 }
+                Workspaces {
+                    id: workspacesWidget
+                    Layout.fillHeight: true
+                    MouseArea {
+                        // Right-click to toggle overview
+                        anchors.fill: parent
+                        acceptedButtons: Qt.RightButton
 
-                ActiveWindow {
-                    visible: root.useShortenedForm === 0
-                    Layout.rightMargin: Appearance.rounding.screenRounding
+                        onPressed: event => {
+                            if (event.button === Qt.RightButton) {
+                                GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
+                            }
+                        }
+                    }
+                }
+                Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                 }
@@ -170,18 +182,24 @@ Item { // Bar content region
 
         BarGroup {
             id: leftCenterGroup
-            Layout.preferredWidth: root.centerSideModuleWidth
+            // Layout.preferredWidth: root.centerSideModuleWidth
             Layout.fillHeight: true
 
-            Resources {
-                alwaysShowAllResources: root.useShortenedForm === 2
-                Layout.fillWidth: root.useShortenedForm === 2
+        //    Resources {
+        //        alwaysShowAllResources: root.useShortenedForm === 2
+        //        Layout.fillWidth: root.useShortenedForm === 2
+        //    }
+
+            // Media {
+            //     visible: root.useShortenedForm < 2
+            //     Layout.fillWidth: true
+            // }
+
+            UtilButtons {
+                visible: (Config.options.bar.verbose && root.useShortenedForm === 0)
+                Layout.alignment: Qt.AlignVCenter
             }
 
-            Media {
-                visible: root.useShortenedForm < 2
-                Layout.fillWidth: true
-            }
         }
 
         VerticalBarSeparator {
@@ -193,22 +211,13 @@ Item { // Bar content region
             padding: workspacesWidget.widgetPadding
             Layout.fillHeight: true
 
-            Workspaces {
-                id: workspacesWidget
-                Layout.fillHeight: true
-                MouseArea {
-                    // Right-click to toggle overview
-                    anchors.fill: parent
-                    acceptedButtons: Qt.RightButton
-
-                    onPressed: event => {
-                        if (event.button === Qt.RightButton) {
-                            GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
-                        }
-                    }
-                }
+            ClockWidget {
+                showDate: (Config.options.bar.verbose && root.useShortenedForm < 2)
+                Layout.alignment: Qt.AlignVCenter
+                Layout.fillWidth: true
             }
-        }
+
+       }
 
         VerticalBarSeparator {
             visible: Config.options?.bar.borderless
@@ -218,31 +227,31 @@ Item { // Bar content region
             id: rightCenterGroup
             implicitWidth: rightCenterGroupContent.implicitWidth
             implicitHeight: rightCenterGroupContent.implicitHeight
-            Layout.preferredWidth: root.centerSideModuleWidth
+            // Layout.preferredWidth: root.centerSideModuleWidth
             Layout.fillHeight: true
 
-            onPressed: {
-                GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
-            }
+            // onPressed: {
+            //     GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
+            // }
 
             BarGroup {
                 id: rightCenterGroupContent
                 anchors.fill: parent
 
-                ClockWidget {
-                    showDate: (Config.options.bar.verbose && root.useShortenedForm < 2)
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.fillWidth: true
-                }
+                // BatteryIndicator {
+                //     visible: (root.useShortenedForm < 2 && UPower.displayDevice.isLaptopBattery)
+                //     Layout.alignment: Qt.AlignVCenter
+                // }
 
-                UtilButtons {
-                    visible: (Config.options.bar.verbose && root.useShortenedForm === 0)
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                BatteryIndicator {
-                    visible: (root.useShortenedForm < 2 && UPower.displayDevice.isLaptopBattery)
-                    Layout.alignment: Qt.AlignVCenter
+                // Weather
+                Loader {
+                    Layout.leftMargin: 8
+                    Layout.fillHeight: true
+                    active: Config.options.bar.weather.enable
+                    sourceComponent: BarGroup {
+                        implicitHeight: Appearance.sizes.baseBarHeight
+                        WeatherBar {}
+                    }
                 }
             }
         }
@@ -430,17 +439,6 @@ Item { // Bar content region
                 Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                }
-
-                // Weather
-                Loader {
-                    Layout.leftMargin: 8
-                    Layout.fillHeight: true
-                    active: Config.options.bar.weather.enable
-                    sourceComponent: BarGroup {
-                        implicitHeight: Appearance.sizes.baseBarHeight
-                        WeatherBar {}
-                    }
                 }
             }
         }

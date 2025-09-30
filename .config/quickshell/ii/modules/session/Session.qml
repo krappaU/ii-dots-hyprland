@@ -91,7 +91,7 @@ Scope {
             id: sessionRoot
             visible: sessionLoader.active
             property string subtitle
-            
+
             function hide() {
                 GlobalStates.sessionOpen = false;
             }
@@ -179,7 +179,7 @@ Scope {
                         id: sessionLogout
                         buttonIcon: "logout"
                         buttonText: Translation.tr("Logout")
-                        onClicked: { root.closeAllWindows(); Quickshell.execDetached(["pkill", "Hyprland"]); sessionRoot.hide() }
+                        onClicked: { root.closeAllWindows(); Quickshell.execDetached(["uwsm", "stop"]); sessionRoot.hide() }
                         onFocusChanged: { if (focus) sessionRoot.subtitle = buttonText }
                         KeyNavigation.left: sessionSleep
                         KeyNavigation.right: sessionTaskManager

@@ -1,6 +1,7 @@
 import qs
 import qs.services
 import qs.modules.common
+import qs.modules.common.widgets
 import qs.modules.common.functions
 import Qt5Compat.GraphicalEffects
 import QtQuick
@@ -21,8 +22,7 @@ Item { // Window
     property real initY: Math.max((windowData?.at[1] - (monitorData?.y ?? 0) - monitorData?.reserved[1]) * root.scale, 0) + yOffset
     property real xOffset: 0
     property real yOffset: 0
-    property int widgetMonitorId: 0
-    
+
     property var targetWindowWidth: windowData?.size[0] * scale
     property var targetWindowHeight: windowData?.size[1] * scale
     property bool hovered: false
@@ -35,12 +35,11 @@ Item { // Window
     property bool compactMode: Appearance.font.pixelSize.smaller * 4 > targetWindowHeight || Appearance.font.pixelSize.smaller * 4 > targetWindowWidth
 
     property bool indicateXWayland: windowData?.xwayland ?? false
-    
+
     x: initX
     y: initY
     width: windowData?.size[0] * root.scale
     height: windowData?.size[1] * root.scale
-    opacity: windowData.monitor == widgetMonitorId ? 1 : 0.4
 
     layer.enabled: true
     layer.effect: OpacityMask {
@@ -70,12 +69,11 @@ Item { // Window
         captureSource: GlobalStates.overviewOpen ? root.toplevel : null
         live: true
 
-        // Color overlay for interactions
         Rectangle {
             anchors.fill: parent
             radius: Appearance.rounding.windowRounding * root.scale
-            color: pressed ? ColorUtils.transparentize(Appearance.colors.colLayer2Active, 0.5) : 
-                hovered ? ColorUtils.transparentize(Appearance.colors.colLayer2Hover, 0.7) : 
+            color: pressed ? ColorUtils.transparentize(Appearance.colors.colLayer2Active, 0.5) :
+                hovered ? ColorUtils.transparentize(Appearance.colors.colLayer2Hover, 0.7) :
                 ColorUtils.transparentize(Appearance.colors.colLayer2)
             border.color : ColorUtils.transparentize(Appearance.m3colors.m3outline, 0.7)
             border.width : 1

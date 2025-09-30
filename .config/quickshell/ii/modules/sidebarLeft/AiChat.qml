@@ -180,7 +180,7 @@ Inline w/ double dollar signs: $$\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\p
 Inline w/ backslash and square brackets \\[\\int_0^\\infty \\frac{1}{x^2} dx = \\infty\\]
 
 Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
-`, 
+`,
                     Ai.interfaceRole);
             }
         },
@@ -286,6 +286,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                 mouseScrollFactor: Config.options.interactions.scrolling.mouseScrollFactor * 1.4
 
                 property int lastResponseLength: 0
+
 
                 clip: true
                 layer.enabled: true
@@ -425,7 +426,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
             radius: Appearance.rounding.small
             color: Appearance.colors.colLayer1
             implicitWidth: messageInputField.implicitWidth
-            implicitHeight: Math.max(inputFieldRowLayout.implicitHeight + inputFieldRowLayout.anchors.topMargin 
+            implicitHeight: Math.max(inputFieldRowLayout.implicitHeight + inputFieldRowLayout.anchors.topMargin
                 + commandButtonsRow.implicitHeight + commandButtonsRow.anchors.bottomMargin + columnSpacing, 45)
             clip: true
             border.color: Appearance.colors.colOutlineVariant
@@ -638,18 +639,18 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                         name: "",
                         sendDirectly: false,
                         dontAddSpace: true,
-                    }, 
+                    },
                     {
                         name: "clear",
                         sendDirectly: true,
-                    }, 
+                    },
                 ]
 
                 ApiInputBoxIndicator { // Model indicator
                     icon: "api"
-                    text: Ai.getModel().name
+                    text: Ai.currentModel?.name
                     tooltipText: Translation.tr("Current model: %1\nSet it with %2model MODEL")
-                        .arg(Ai.getModel().name)
+                        .arg(Ai.currentModel?.name)
                         .arg(root.commandPrefix)
                 }
 
@@ -689,7 +690,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
             }
 
         }
-        
+
     }
 
 }

@@ -19,6 +19,8 @@ import "./ai/"
 Singleton {
     id: root
 
+    signal modelChanged()
+
     property Component aiMessageComponent: AiMessageData {}
     property Component aiModelComponent: AiModel {}
     property Component geminiApiStrategy: GeminiApiStrategy {}
@@ -74,7 +76,7 @@ Singleton {
         "{DISTRO}": SystemInfo.distroName,
         "{DATETIME}": `${DateTime.time}, ${DateTime.collapsedCalendarFormat}`,
         "{WINDOWCLASS}": ToplevelManager.activeToplevel?.appId ?? "Unknown",
-        "{DE}": `${SystemInfo.desktopEnvironment} (${SystemInfo.windowingSystem})` 
+        "{DE}": `${SystemInfo.desktopEnvironment} (${SystemInfo.windowingSystem})`
     }
 
     // Gemini: https://ai.google.dev/gemini-api/docs/function-calling
@@ -247,7 +249,7 @@ Singleton {
     // - key_get_description: Description of pricing and how to get an API key
     // - api_format: The API format of the model. Can be "openai" or "gemini". Default is "openai".
     // - extraParams: Extra parameters to be passed to the model. This is a JSON object.
-    property var models: {
+    property var models: Config.options.policies.ai === 2 ? {} : {
         "gemini-2.0-flash": aiModelComponent.createObject(this, {
             "name": "Gemini 2.0 Flash",
             "icon": "google-gemini-symbolic",
@@ -327,7 +329,8 @@ Singleton {
         }),
     }
     property var modelList: Object.keys(root.models)
-    property var currentModelId: Persistent.states?.ai?.model || modelList[0]
+    property var currentModelId: Persistent?.states?.ai?.model ?? ""
+    property var currentModel: models[currentModelId]
 
     property var apiStrategies: {
         "openai": openaiApiStrategy.createObject(this),
@@ -346,10 +349,14 @@ Singleton {
             });
         }
     }
-
-    Component.onCompleted: {
-        setModel(currentModelId, false, false); // Do necessary setup for model
+    Connections {
+        target: Persistent
+        function onFileLoaded() {
+            root.currentModelId = Persistent.states.ai.model;
+            root.setModel(root.currentModelId, false, false);
+        }
     }
+
 
     function guessModelLogo(model) {
         if (model.includes("llama")) return "ollama-symbolic";
@@ -400,6 +407,10 @@ Singleton {
                     });
 
                     root.modelList = Object.keys(root.models);
+
+                    if (root.modelList.includes(root.currentModelId)) {
+                        root.setModel(root.currentModelId, false, false);
+                    }
 
                 } catch (e) {
                     console.log("Could not fetch Ollama models:", e);
@@ -495,7 +506,7 @@ Singleton {
     function addApiKeyAdvice(model) {
         root.addMessage(
             Translation.tr('To set an API key, pass it with the %4 command\n\nTo view the key, pass "get" with the command<br/>\n\n### For %1:\n\n**Link**: %2\n\n%3')
-                .arg(model.name).arg(model.key_get_link).arg(model.key_get_description ?? Translation.tr("<i>No further instruction provided</i>")).arg("/key"), 
+                .arg(model.name).arg(model.key_get_link).arg(model.key_get_description ?? Translation.tr("<i>No further instruction provided</i>")).arg("/key"),
             Ai.interfaceRole
         );
     }
@@ -506,7 +517,6 @@ Singleton {
 
     function setModel(modelId, feedback = true, setPersistentState = true) {
         if (!modelId) modelId = ""
-        modelId = modelId.toLowerCase()
         if (modelList.indexOf(modelId) !== -1) {
             const model = models[modelId]
             // Fetch API keys if needed
@@ -521,6 +531,7 @@ Singleton {
             }
             if (setPersistentState) Persistent.states.ai.model = modelId;
             if (feedback) root.addMessage(Translation.tr("Model set to %1").arg(model.name), root.interfaceRole);
+            root.currentModel = model;
             if (model.requires_key) {
                 // If key not there show advice
                 if (root.apiKeysLoaded && (!root.apiKeys[model.key_id] || root.apiKeys[model.key_id].length === 0)) {
@@ -540,7 +551,7 @@ Singleton {
         Config.options.ai.tool = tool;
         return true;
     }
-    
+
     function getTemperature() {
         return root.temperature;
     }
@@ -629,7 +640,7 @@ Singleton {
             let requestHeaders = {
                 "Content-Type": "application/json",
             }
-            
+
             /* Create local message object */
             requester.message = root.aiMessageComponent.createObject(root, {
                 "role": "assistant",
@@ -643,7 +654,7 @@ Singleton {
             root.messageIDs = [...root.messageIDs, id];
             root.messageByID[id] = requester.message;
 
-            /* Build header string for curl */ 
+            /* Build header string for curl */
             let headerString = Object.entries(requestHeaders)
                 .filter(([k, v]) => v && v.length > 0)
                 .map(([k, v]) => `-H '${k}: ${v}'`)
@@ -654,13 +665,13 @@ Singleton {
 
             /* Get authorization header from strategy */
             const authHeader = requester.currentStrategy.buildAuthorizationHeader(root.apiKeyEnvVarName);
-            
+
             /* Create command string */
             const requestCommandString = `curl --no-buffer "${endpoint}"`
                 + ` ${headerString}`
                 + (authHeader ? ` ${authHeader}` : "")
                 + ` -d '${CF.StringUtils.shellSingleQuoteEscape(JSON.stringify(data))}'`
-            
+
             /* Send the request */
             requester.command = baseCommand.concat([requestCommandString]);
             requester.running = true
@@ -676,7 +687,7 @@ Singleton {
                 try {
                     const result = requester.currentStrategy.parseResponseLine(data, requester.message);
                     // console.log("[Ai] Parsed response result: ", JSON.stringify(result, null, 2));
-                    
+
                     if (result.functionCall) {
                         requester.message.functionCall = result.functionCall;
                         root.handleFunctionCall(result.functionCall.name, result.functionCall.args, requester.message);
@@ -689,7 +700,7 @@ Singleton {
                     if (result.finished) {
                         requester.markDone();
                     }
-                    
+
                 } catch (e) {
                     console.log("[AI] Could not parse response: ", e);
                     requester.message.rawContent += data;
@@ -700,7 +711,7 @@ Singleton {
 
         onExited: (exitCode, exitStatus) => {
             const result = requester.currentStrategy.onRequestFinished(requester.message);
-            
+
             if (result.finished) {
                 requester.markDone();
             } else if (!requester.message.done) {

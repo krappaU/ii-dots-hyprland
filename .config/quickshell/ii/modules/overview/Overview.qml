@@ -21,7 +21,7 @@ Scope {
             required property var modelData
             property string searchingText: ""
             readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.screen)
-            property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor?.id)
+            property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor.id)
             screen: modelData
             visible: GlobalStates.overviewOpen
 
@@ -40,8 +40,8 @@ Scope {
             anchors {
                 top: true
                 bottom: true
-                left: !(Config?.options.overview.enable ?? true) 
-                right: !(Config?.options.overview.enable ?? true) 
+                left: !(Config?.options.overview.enable ?? true)
+                right: !(Config?.options.overview.enable ?? true)
             }
 
             HyprlandFocusGrab {
